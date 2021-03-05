@@ -3,42 +3,60 @@ const { Sequelize } = require('../config/db.config.js');
 
 // imports functions
 const { success, error } = require('../functions/response');
-const { validation } = require('../functions/registration.validation.js');
+const { emptyField } = require('../functions/emptyField.js');
+const { pswdConfirmed } = require('../functions/pswdConfirmed.js');
+const { pswdSize } = require('../functions/pswdSize.js');
 
 
 module.exports = {
-    // Create user
     createUser(req, res) {
-        const body = req.body;
-        if (body.nom == '' || body.prenom == '' || body.email == '' || body.pswd == '' || body.pswd2 == '') {
-            res.status(400).send(error({
-                message: 'All of the field is required to create an account'
-            }));
+        const { nom, prenom, email, pswd, pswd2 } = req.body;
+        let valueValidate = false;
+        const valueNotEmpty = emptyField(nom, prenom, email, pswd, pswd2);
+        const passwordConfirmed = pswdConfirmed(pswd, pswd2);
+        const goodSizeToPswd = pswdSize(pswd);
+
+        if (!valueNotEmpty) {
+            res.status(500).send(error(
+                `All of the fields is required !`
+            ));
+        }
+
+        if (!passwordConfirmed) {
+            res.status(500).send(error(
+                `Password must be confirmed !`
+            ));
+        }
+
+        if (!goodSizeToPswd) {
+            res.status(500).send(error(
+                `Password must have more than 6 characters !`
+            ));
+        } else {
+            valueValidate = true;
         }
         
-        // validation(body);
-
-        try {
-            const user = new User({
-                nom: body.nom,
-                prenom: body.prenom,
-                email: body.email,
-                pswd: body.pswd
-            });
+        if (valueValidate) {
+            try {
+                const user = new User({
+                    nom: nom,
+                    prenom: prenom,
+                    email: email,
+                    pswd: pswd
+                });
             
-            // validation(user);
-
-            user.save()
-             .then(user => res.send(success(user)))
-             .catch(err => { 
-                 if (err.message.includes('Validation error')) {
-                    res.send(`${user.nom} cannot be created ${user.email} already exist ❌ !`);
-                 } else {
-                    res.status(500).send(`The user ${user.nom} cannot be created ❌ ! Error : ${err}`);
-                 }
-             });
-        } catch (err) {
-            res.send(error(err));
+                user.save()
+                .then(user => res.send(success(user)))
+                .catch(err => { 
+                    if (err.message.includes('Validation error')) {
+                        res.send(`${user.nom} cannot be created ${user.email} already exist ❌ !`);
+                    } else {
+                        res.status(500).send(`The user ${user.nom} cannot be created ❌ ! Error : ${err}`);
+                    }
+                });
+            } catch (err) {
+                res.send(error(err));
+            }
         }
     }
 }
