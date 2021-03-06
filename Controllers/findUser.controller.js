@@ -1,6 +1,6 @@
 //const { success } = require('../functions/response.js');
 const User = require('../models/users.model.js');
-const { success, error } = require('../functions/response.js');
+const { success, error } = require('../validationFunctions/response.js');
 
 module.exports = {
     // Find all user

@@ -1,11 +1,11 @@
 const User = require('../models/users.model.js');
-const { Sequelize } = require('../config/db.config.js');
 
 // imports functions
-const { success, error } = require('../functions/response');
-const { emptyField } = require('../functions/emptyField.js');
-const { pswdConfirmed } = require('../functions/pswdConfirmed.js');
-const { pswdSize } = require('../functions/pswdSize.js');
+const { success, error } = require('../validationFunctions/response');
+const { emptyField } = require('../validationFunctions/emptyField.js');
+const { pswdConfirmed } = require('../validationFunctions/pswdConfirmed.js');
+const { pswdSize } = require('../validationFunctions/pswdSize.js');
+const { userExist } = require('../validationFunctions/userExist.js');
 
 
 module.exports = {
@@ -44,12 +44,15 @@ module.exports = {
                     email: email,
                     pswd: pswd
                 });
+
+                //const userInDb = userExist(user);
+                //console.log(userInDb);
             
                 user.save()
                 .then(user => res.send(success(user)))
                 .catch(err => { 
                     if (err.message.includes('Validation error')) {
-                        res.send(`${user.nom} cannot be created ${user.email} already exist ❌ !`);
+                        res.send(`${user.email} already exist ❌ !`);
                     } else {
                         res.status(500).send(`The user ${user.nom} cannot be created ❌ ! Error : ${err}`);
                     }
